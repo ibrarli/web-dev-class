@@ -1,18 +1,18 @@
 // scripts/init-db.ts
-import { loadEnvConfig } from '@next/env';
-import { neon } from '@neondatabase/serverless';
+import { loadEnvConfig } from "@next/env";
+import { neon } from "@neondatabase/serverless";
 
 // Automatically load environment variables from .env.local
 loadEnvConfig(process.cwd());
 
 if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL is missing from .env.local');
+  throw new Error("DATABASE_URL is missing from .env.local");
 }
 
 const sql = neon(process.env.DATABASE_URL);
 
 async function initDB() {
-  console.log('⏳ Initializing Neon Database Schema...');
+  console.log("⏳ Initializing Neon Database Schema...");
 
   try {
     // 1. Users Table
@@ -46,12 +46,14 @@ async function initDB() {
     // 3. Posts Table
     await sql`
       CREATE TABLE IF NOT EXISTS posts (
-        id SERIAL PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        content TEXT NOT NULL,
-        user_id INT REFERENCES users(id) ON DELETE CASCADE,
-        visibility VARCHAR(20) DEFAULT 'everyone',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(255) NOT NULL,
+  content TEXT NOT NULL,
+  visibility VARCHAR(20) DEFAULT 'everyone',
+  media_url TEXT,
+  media_type VARCHAR(10),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `;
 
@@ -113,9 +115,18 @@ async function initDB() {
         UNIQUE(user_id, post_id)
       );
     `;
-    console.log('✅ Database schema initialized successfully!');
+  
+    // 9. Cloudinary Media Columns
+    await sql`
+      ALTER TABLE posts
+        ADD COLUMN IF NOT EXISTS media_url TEXT,
+        ADD COLUMN IF NOT EXISTS media_type VARCHAR(10);
+      `;
+
+
+    console.log("✅ Database schema initialized successfully!");
   } catch (error) {
-    console.error('❌ Failed to initialize database:', error);
+    console.error("❌ Failed to initialize database:", error);
   } finally {
     process.exit();
   }

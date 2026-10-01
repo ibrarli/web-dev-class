@@ -139,7 +139,7 @@ export default function CommentItem({
           </button>
         </div>
       ) : (
-        <p className="mb-2 text-gray-800">{comment.content}</p>
+        <p className="mb-2 text-grey-300">{comment.content}</p>
       )}
 
       {/* Comment Reaction Section */}
@@ -167,13 +167,13 @@ export default function CommentItem({
           <button
             onClick={() => handleToggleReaction(currentReactionType || 'like')}
             className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded hover:bg-gray-100 transition-colors ${
-              activeReaction ? activeReaction.color : 'text-gray-500'
+              activeReaction ? activeReaction.color : 'text-grey-300'
             }`}
           >
             <span>{activeReaction ? activeReaction.icon : '👍'}</span>
             <span>{activeReaction ? activeReaction.label : 'Like'}</span>
             {Boolean(comment.reaction_count) && (
-              <span className="text-gray-400 text-[10px] ml-0.5">({comment.reaction_count})</span>
+              <span className="text-grey-300 text-[10px] ml-0.5">({comment.reaction_count})</span>
             )}
           </button>
         </div>

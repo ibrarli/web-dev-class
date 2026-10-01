@@ -48,3 +48,4 @@ export async function PATCH() {
     return NextResponse.json({ error: 'Failed to update notifications' }, { status: 500 });
   }
 }
+ 

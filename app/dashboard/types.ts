@@ -45,15 +45,16 @@ export type PostVisibility = 'everyone' | 'friends' | 'no_one';
 
 export interface Post {
   id: number;
+  user_id: number;
   title: string;
   content: string;
-  user_id: number;
-  author_name: string;
-  created_at: string;
-  visibility: PostVisibility;
+  author_name?: string;
+  visibility?: PostVisibility;
   like_count: number;
-  user_reaction: ReactionType | null;
-  is_bookmarked?: boolean;
+  user_reaction?: ReactionType | null;
+  is_bookmarked?: boolean;      // <-- Add this
+  media_url?: string;           // <-- Add this
+  media_type?: 'image' | 'video'; // <-- Add this
 }
 
 export interface Comment {

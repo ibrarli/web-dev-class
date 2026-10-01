@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Post, Comment, ReactionUser, PostVisibility, ReactionType, REACTION_EMOJIS } from '../types';
 import CommentSection from './CommentSection';
 import LikesModal from './LikesModal';
@@ -107,7 +108,30 @@ export default function PostItem({
       </div>
 
       {/* Body */}
-      <p className="whitespace-pre-wrap text-sm">{post.content}</p>
+      {post.content && <p className="whitespace-pre-wrap text-sm">{post.content}</p>}
+
+      {/* Cloudinary Media Container */}
+      {post.media_url && (
+        <div className="relative w-full rounded-lg overflow-hidden border my-2 bg-black/5">
+          {post.media_type === 'video' ? (
+            <video
+              src={post.media_url}
+              controls
+              className="w-full max-h-[500px] object-contain rounded-lg"
+            />
+          ) : (
+            <div className="relative w-full h-[350px] sm:h-[450px]">
+              <Image
+                src={post.media_url}
+                alt={post.title || 'Post image'}
+                fill
+                className="object-cover rounded-lg"
+                sizes="(max-width: 768px) 100vw, 700px"
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Reaction & Actions Bar */}
       <div className="flex items-center justify-between border-t border-b py-2 text-xs relative">
