@@ -7,7 +7,7 @@ async function getAuthUserId() {
   return cookieStore.get('userId')?.value;
 }
 
-// GET: Fetch posts with visibility logic, total reaction count, user reaction type, and bookmark status
+// GET: Fetch posts with visibility logic, total reaction count, user reaction type, bookmark status, and media columns
 export async function GET() {
   try {
     const userId = await getAuthUserId();
@@ -22,6 +22,8 @@ export async function GET() {
         posts.content, 
         posts.user_id, 
         posts.visibility,
+        posts.media_url,
+        posts.media_type,
         posts.created_at, 
         users.name as author_name,
         COUNT(DISTINCT likes.id)::int as like_count,
@@ -61,20 +63,27 @@ export async function GET() {
   }
 }
 
-// POST: Create a post with visibility setting
+// POST: Create a post with visibility setting and optional media
 export async function POST(request: Request) {
   try {
     const userId = await getAuthUserId();
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { title, content, visibility } = await request.json();
+    const { title, content, visibility, media_url, media_type } = await request.json();
     if (!title || !content) {
       return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
     }
 
     await sql`
-      INSERT INTO posts (title, content, user_id, visibility) 
-      VALUES (${title}, ${content}, ${Number(userId)}, ${visibility || 'everyone'})
+      INSERT INTO posts (title, content, user_id, visibility, media_url, media_type) 
+      VALUES (
+        ${title}, 
+        ${content}, 
+        ${Number(userId)}, 
+        ${visibility || 'everyone'}, 
+        ${media_url || null}, 
+        ${media_type || null}
+      )
     `;
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
@@ -82,17 +91,22 @@ export async function POST(request: Request) {
   }
 }
 
-// PUT: Edit post details and visibility (Owner Only)
+// PUT: Edit post details, visibility, and media (Owner Only)
 export async function PUT(request: Request) {
   try {
     const userId = await getAuthUserId();
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { id, title, content, visibility } = await request.json();
+    const { id, title, content, visibility, media_url, media_type } = await request.json();
 
     const result = await sql`
       UPDATE posts 
-      SET title = ${title}, content = ${content}, visibility = ${visibility || 'everyone'}
+      SET 
+        title = ${title}, 
+        content = ${content}, 
+        visibility = ${visibility || 'everyone'},
+        media_url = ${media_url || null},
+        media_type = ${media_type || null}
       WHERE id = ${id} AND user_id = ${Number(userId)}
       RETURNING id
     `;
@@ -118,7 +132,7 @@ export async function DELETE(request: Request) {
 
     const result = await sql`
       DELETE FROM posts 
-      WHERE id = ${id} AND user_id = ${Number(userId)}
+      WHERE id = ${Number(id)} AND user_id = ${Number(userId)}
       RETURNING id
     `;
 

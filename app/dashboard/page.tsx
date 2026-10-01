@@ -15,9 +15,12 @@ export default function DashboardPage() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [users, setUsers] = useState<UserWithFriendStatus[]>([]);
 
+  // Form State
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [visibility, setVisibility] = useState<PostVisibility>('everyone');
+  const [mediaUrl, setMediaUrl] = useState<string | undefined>(undefined);
+  const [mediaType, setMediaType] = useState<'image' | 'video' | undefined>(undefined);
   const [editingPostId, setEditingPostId] = useState<number | null>(null);
 
   const loadData = async () => {
@@ -45,28 +48,42 @@ export default function DashboardPage() {
     loadData();
   }, []);
 
+  const resetForm = () => {
+    setTitle('');
+    setContent('');
+    setVisibility('everyone');
+    setMediaUrl(undefined);
+    setMediaType(undefined);
+    setEditingPostId(null);
+  };
+
   const handleSavePost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !content) return;
+
+    const payload = {
+      title,
+      content,
+      visibility,
+      media_url: mediaUrl,
+      media_type: mediaType,
+    };
 
     if (editingPostId) {
       await fetch('/api/posts', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: editingPostId, title, content, visibility }),
+        body: JSON.stringify({ id: editingPostId, ...payload }),
       });
-      setEditingPostId(null);
     } else {
       await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content, visibility }),
+        body: JSON.stringify(payload),
       });
     }
 
-    setTitle('');
-    setContent('');
-    setVisibility('everyone');
+    resetForm();
     loadData();
   };
 
@@ -167,17 +184,16 @@ export default function DashboardPage() {
             title={title}
             content={content}
             visibility={visibility}
+            mediaUrl={mediaUrl}
+            mediaType={mediaType}
             isEditing={Boolean(editingPostId)}
             setTitle={setTitle}
             setContent={setContent}
             setVisibility={setVisibility}
+            setMediaUrl={setMediaUrl}
+            setMediaType={setMediaType}
             onSubmit={handleSavePost}
-            onCancel={() => {
-              setEditingPostId(null);
-              setTitle('');
-              setContent('');
-              setVisibility('everyone');
-            }}
+            onCancel={resetForm}
           />
 
           <div className="space-y-6">
@@ -194,6 +210,8 @@ export default function DashboardPage() {
                   setTitle(p.title);
                   setContent(p.content);
                   setVisibility(p.visibility || 'everyone');
+                  setMediaUrl(p.media_url);
+                  setMediaType(p.media_type);
                 }}
                 onDeletePost={handleDeletePost}
                 onToggleReaction={handleToggleReaction}
